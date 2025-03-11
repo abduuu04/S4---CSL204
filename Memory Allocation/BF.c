@@ -1,78 +1,63 @@
 #include <stdio.h>
+#define MAX 20
 
-int main()
-{
-    int total_processes, total_memory;
+int main() {
+    int bsize[MAX], fsize[MAX], nb, nf;
+    int temp, low;
+    int bflag[MAX] = {0}, fflag[MAX] = {0}; // Initialize flags to 0
+    int i, j;
 
-    // Get the number of processes and available memory
-    printf("Enter the number of processes: ");
-    scanf("%d", &total_processes);
+    printf("\nEnter the number of memory blocks: ");
+    scanf("%d", &nb);
 
-    printf("Enter the total memory available: ");
-    scanf("%d", &total_memory);
-
-    // Initialize arrays for process size, memory size, and allocation flags
-    int process_size[2][total_processes];
-    int memory[2][total_memory];
-
-    // Get the memory required for each process
-    printf("Enter the memory required for each process:\n");
-    for (int i = 0; i < total_processes; i++)
-    {
-        printf("Process %d: ", i + 1);
-        scanf("%d", &process_size[0][i]);
-        process_size[1][i] = 0; // flag
+    printf("Enter the size of %d memory blocks:\n", nb);
+    for (i = 0; i < nb; i++) {
+        printf("Block %d size: ", i + 1);
+        scanf("%d", &bsize[i]);
     }
 
-    // Get the memory available for each block
-    printf("Enter the memory available for each block:\n");
-    for (int i = 0; i < total_memory; i++)
-    {
-        printf("Block %d: ", i + 1);
-        scanf("%d", &memory[0][i]);
-        memory[1][i] = 0; // flag
+    printf("\nEnter the number of files: ");
+    scanf("%d", &nf);
+
+    printf("Enter the size of %d files:\n", nf);
+    for (i = 0; i < nf; i++) {
+        printf("File %d size: ", i + 1);
+        scanf("%d", &fsize[i]);
     }
 
-    // Allocate memory using best-fit algorithm
-    printf("\nAllocated processes:\n");
-    for (int i = 0; i < total_processes; i++)
-    {
-        int best_fit_index = -1;
-        int best_fit_remaining_memory = total_memory;
+    // Best Fit Algorithm
+    for (i = 0; i < nf; i++) {
+        low = 10000; // Reset low for each file
+        int best_index = -1; // Store index of best block
 
-        // Find the best fit block among available ones
-        for (int j = 0; j < total_memory; j++)
-        {
-            if (memory[1][j] == 0 && memory[0][j] >= process_size[0][i])
-            {
-                int remaining_memory = memory[0][j] - process_size[0][i];
-                if (best_fit_index == -1 || remaining_memory < best_fit_remaining_memory)
-                {
-                    best_fit_index = j;
-                    best_fit_remaining_memory = remaining_memory;
+        for (j = 0; j < nb; j++) {
+            if (!bflag[j]) { // If block is not allocated
+                temp = bsize[j] - fsize[i];
+
+                if (temp >= 0 && temp < low) { // If it fits and is the smallest fit so far
+                    best_index = j;
+                    low = temp;
                 }
             }
         }
 
-        // Allocate the best fit block if found
-        if (best_fit_index != -1)
-        {
-            memory[1][best_fit_index] = 1;
-            process_size[1][i] = 1;
-            printf("Process %d is allocated to Block %d\n", i + 1, best_fit_index + 1);
+        if (best_index != -1) {
+            fflag[i] = best_index;
+            bflag[best_index] = 1; // Mark block as allocated
+        } else {
+            fflag[i] = -1; // Indicate no suitable block found
         }
     }
 
-    // Print unallocated processes
-    printf("\nUnallocated processes: ");
-    for (int i = 0; i < total_processes; i++)
-    {
-        if (process_size[1][i] == 0)
-        {
-            printf("%d ", i + 1);
+    // Print Allocation Results
+    printf("\nFile No\tFile Size\tBlock No\tBlock Size\n");
+    for (i = 0; i < nf; i++) {
+        if (fflag[i] != -1) {
+            printf("%d\t\t%d\t\t%d\t\t%d\n", i + 1, fsize[i], fflag[i] + 1, bsize[fflag[i]]);
+        } else {
+            printf("%d\t\t%d\t\tNot Allocated\n", i + 1, fsize[i]);
         }
     }
-    printf("\n");
 
     return 0;
 }
